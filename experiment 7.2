@@ -1,0 +1,110 @@
+import java.sql.*;
+import java.util.Scanner;
+
+public class ProductCRUD {
+    static final String URL = "jdbc:mysql://localhost:3306/your_database";
+    static final String USER = "root";
+    static final String PASSWORD = "your_password";
+    static Scanner sc = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        int choice;
+        do {
+            System.out.println("\n--- Product Management ---");
+            System.out.println("1. Add Product");
+            System.out.println("2. View Products");
+            System.out.println("3. Update Product");
+            System.out.println("4. Delete Product");
+            System.out.println("5. Exit");
+            System.out.print("Enter choice: ");
+            choice = sc.nextInt();
+            
+            switch (choice) {
+                case 1 -> addProduct();
+                case 2 -> viewProducts();
+                case 3 -> updateProduct();
+                case 4 -> deleteProduct();
+                case 5 -> System.out.println("Exiting...");
+                default -> System.out.println("Invalid choice!");
+            }
+        } while (choice != 5);
+    }
+
+    public static void addProduct() {
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD)) {
+            System.out.print("Enter Product Name: ");
+            String name = sc.next();
+            System.out.print("Enter Price: ");
+            double price = sc.nextDouble();
+            System.out.print("Enter Quantity: ");
+            int qty = sc.nextInt();
+
+            String query = "INSERT INTO Product (ProductName, Price, Quantity) VALUES (?, ?, ?)";
+            PreparedStatement pstmt = con.prepareStatement(query);
+            pstmt.setString(1, name);
+            pstmt.setDouble(2, price);
+            pstmt.setInt(3, qty);
+
+            int rows = pstmt.executeUpdate();
+            if (rows > 0) {
+                System.out.println("Product added successfully!");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void viewProducts() {
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD)) {
+            Statement stmt = con.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT * FROM Product");
+            
+            System.out.println("\nProductID\tProductName\tPrice\tQuantity");
+            while (rs.next()) {
+                System.out.println(rs.getInt("ProductID") + "\t\t" + rs.getString("ProductName") +
+                        "\t\t" + rs.getDouble("Price") + "\t" + rs.getInt("Quantity"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void updateProduct() {
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD)) {
+            System.out.print("Enter ProductID to update: ");
+            int id = sc.nextInt();
+            System.out.print("Enter new Price: ");
+            double price = sc.nextDouble();
+            
+            String query = "UPDATE Product SET Price = ? WHERE ProductID = ?";
+            PreparedStatement pstmt = con.prepareStatement(query);
+            pstmt.setDouble(1, price);
+            pstmt.setInt(2, id);
+
+            int rows = pstmt.executeUpdate();
+            if (rows > 0) {
+                System.out.println("Product updated successfully!");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void deleteProduct() {
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD)) {
+            System.out.print("Enter ProductID to delete: ");
+            int id = sc.nextInt();
+
+            String query = "DELETE FROM Product WHERE ProductID = ?";
+            PreparedStatement pstmt = con.prepareStatement(query);
+            pstmt.setInt(1, id);
+
+            int rows = pstmt.executeUpdate();
+            if (rows > 0) {
+                System.out.println("Product deleted successfully!");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
